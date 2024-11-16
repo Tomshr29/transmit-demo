@@ -1,5 +1,6 @@
-import React, {useRef, useState} from "react";
-import {getCsrfToken} from "~/utils";
+import { router } from '@inertiajs/react'
+import React, { useRef, useState } from 'react'
+import { getCsrfToken } from '~/utils'
 
 export default function Home() {
   const [username, setUsername] = useState('')
@@ -9,6 +10,30 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    if (!username || !channel) {
+      alert('Please choose username and/or channel')
+      return
+    }
+
+    try {
+      const values = new FormData(e.currentTarget)
+      values.append('channel', channel)
+
+      const response = await fetch(`/channel/${channel}/join`, {
+        method: 'POST',
+        body: values,
+      })
+
+      if (response.ok) {
+        localStorage.setItem('username', username)
+        router.visit(`/channel/${channel}`)
+      } else {
+        console.error('Error on request:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error on form send', error)
+    }
   }
 
   const handleChannelSelection = (channel: string) => {
@@ -19,11 +44,16 @@ export default function Home() {
     <>
       <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-16">
-          <form ref={formRef} onSubmit={(e) => handleSubmit(e)}
-                className="flex flex-col items-center gap-16 p-10 rounded-md shadow-md">
-            <div dangerouslySetInnerHTML={{__html: csrfTokenInput}}/>
+          <form
+            ref={formRef}
+            onSubmit={(e) => handleSubmit(e)}
+            className="flex flex-col items-center gap-16 p-10 rounded-md shadow-md"
+          >
+            <div dangerouslySetInnerHTML={{ __html: csrfTokenInput }} />
             <div className="flex items-center gap-10">
-              <label htmlFor="username" className="text-lg font-medium">Pseudo</label>
+              <label htmlFor="username" className="text-lg font-medium">
+                Pseudo
+              </label>
               <input
                 id="username"
                 type="text"
